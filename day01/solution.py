@@ -1,8 +1,16 @@
+def calculate_fuel(modules):
+    fuel = 0
+    for weight in modules:
+        fuel += weight//3 - 2
+
+    return fuel
+
 f = open("input.txt", "r")
 
-fuel = 0
+modules = list()
 for line in f:
     weight = int(line.strip())
-    fuel += weight//3 - 2
+    modules.append(weight)
 
+fuel = calculate_fuel(modules)
 print(fuel)
