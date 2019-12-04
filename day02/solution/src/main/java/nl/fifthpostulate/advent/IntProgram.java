@@ -1,12 +1,12 @@
 package nl.fifthpostulate.advent;
 
 public class IntProgram {
-    private final int[] program;
-    private int programCounter = 0;
+    private final int[] memory;
+    private int instructionPointer = 0;
 
 
-    public IntProgram(int... program) {
-        this.program = program;
+    public IntProgram(int... memory) {
+        this.memory = memory;
     }
 
     public void run() {
@@ -17,49 +17,54 @@ public class IntProgram {
     }
 
     public Opcode step() {
-        Opcode opcode = Opcode.from(program[programCounter]);
-        opcode.execute(programCounter, program);
-        programCounter += 4;
+        Opcode opcode = Opcode.from(memory[instructionPointer]);
+        opcode.execute(instructionPointer, memory);
+        instructionPointer += opcode.increment();
         return opcode;
     }
 
     public int[] dump() {
-        return program;
+        return memory;
     }
 
     private enum Opcode {
         Add {
             @Override
-            public void execute(int programCounter, int[] program) {
-                int leftIndex = program[programCounter + 1];
-                int left = program[leftIndex];
-                int rightIndex = program[programCounter + 2];
-                int right = program[rightIndex];
-                int index = program[programCounter + 3];
-                program[index] = left + right;
+            public void execute(int instructionPointer, int[] memory) {
+                int leftIndex = memory[instructionPointer + 1];
+                int left = memory[leftIndex];
+                int rightIndex = memory[instructionPointer + 2];
+                int right = memory[rightIndex];
+                int index = memory[instructionPointer + 3];
+                memory[index] = left + right;
             }
         },
         Multiply {
             @Override
-            public void execute(int programCounter, int[] program) {
-                int leftIndex = program[programCounter + 1];
-                int left = program[leftIndex];
-                int rightIndex = program[programCounter + 2];
-                int right = program[rightIndex];
-                int index = program[programCounter + 3];
-                program[index] = left * right;
+            public void execute(int instructionPointer, int[] memory) {
+                int leftIndex = memory[instructionPointer + 1];
+                int left = memory[leftIndex];
+                int rightIndex = memory[instructionPointer + 2];
+                int right = memory[rightIndex];
+                int index = memory[instructionPointer + 3];
+                memory[index] = left * right;
             }
         },
         Stop {
             @Override
-            public void execute(int programCounter, int[] program) {
+            public void execute(int instructionPointer, int[] memory) {
                 // do nothing
+            }
+
+            @Override
+            public int increment() {
+                return 1;
             }
         },
         Unknown {
             @Override
-            public void execute(int programCounter, int[] program) {
-                throw new IllegalArgumentException(String.format("unknown opcode '%d' at index %d", program[programCounter], programCounter));
+            public void execute(int instructionPointer, int[] memory) {
+                throw new IllegalArgumentException(String.format("unknown opcode '%d' at index %d", memory[instructionPointer], instructionPointer));
             }
         };
 
@@ -72,7 +77,11 @@ public class IntProgram {
             }
         }
 
-        public abstract void execute(int programCounter, int[] program);
+        public abstract void execute(int instructionPointer, int[] memory);
+
+        public int increment() {
+            return 4;
+        }
     }
 }
 
