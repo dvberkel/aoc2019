@@ -8,15 +8,23 @@ import java.util.Arrays;
 public class Application {
     public static void main(String[] args) throws IOException {
         String input = readInputFromFile("input.txt");
-        int[] program = toProgram(input.trim());
+        int[] source = toProgram(input.trim());
 
-        program[1] = 12;
-        program[2] = 2;
-        IntProgram computer = new IntProgram(program);
+        outer: for (int noun = 0; noun < 100; noun++) {
+            for (int verb = 0; verb < 100; verb++) {
+                int[] program = Arrays.copyOf(source, source.length);
+                program[1] = noun;
+                program[2] = verb;
 
-        computer.run();
+                IntProgram computer = new IntProgram(program);
+                computer.run();
 
-        System.out.println(program[0]);
+                if (program[0] == 19690720) {
+                    System.out.printf("%d", 100 * noun + verb);
+                    break outer;
+                }
+            }
+        }
     }
 
     private static String readInputFromFile(String filePath) throws IOException {
