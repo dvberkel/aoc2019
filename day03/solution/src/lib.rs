@@ -16,17 +16,22 @@ impl Panel {
         self.wires.push(wire.segments());
     }
 
-    pub fn nearest_intersection(&self) -> Position {
+    pub fn intersections(&self) -> Vec<Position> {
         let initial: Set<Position> = self.wires[0].iter().cloned().collect();
-        let mut entries: Vec<_> = self
+        let intersections: Vec<Position> = self
             .wires
             .iter()
             .fold(initial, |acc, s| acc.intersection(&s).cloned().collect())
             .iter()
             .cloned()
             .collect();
-        entries.sort_by(|l, r| l.distance().cmp(&r.distance()));
-        entries[0]
+        intersections
+    }
+
+    pub fn nearest_intersection(&self) -> Position {
+        let mut intersections = self.intersections();
+        intersections.sort_by(|l, r| l.distance().cmp(&r.distance()));
+        intersections[0]
     }
 }
 
@@ -68,6 +73,20 @@ pub struct Wire {
 impl Wire {
     pub fn segments(&self) -> Set<Position> {
         self.segments.iter().cloned().collect()
+    }
+
+    pub fn distance_to(&self, position: &Position) -> Distance {
+        if self.segments.contains(position) {
+           self.segments.iter()
+           .enumerate()
+           .filter(|(_, p)| **p == *position)
+           .map(|(index, _)| index)
+           .map(Distance::Finite)
+           .nth(0)
+           .unwrap(/* safe because position is present */)
+        } else {
+            Distance::Infinite
+        }
     }
 }
 
@@ -124,6 +143,11 @@ impl From<Vec<Direction>> for Wire {
             .1;
         Self { segments }
     }
+}
+
+pub enum Distance {
+    Infinite,
+    Finite(usize),
 }
 
 pub struct Instructions {
@@ -230,7 +254,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn wires_should_be_placed() {
+    fn nearest_intersection_should_be_correctly_calculated() {
         let mut panel = Panel::empty();
 
         let wire = "R8,U5,L5,D3".parse::<Wire>().expect("wire to be parsed");
