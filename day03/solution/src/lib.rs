@@ -42,7 +42,7 @@ impl Panel {
             .map(|p| self.wires.iter().map(|w| w.distance_to(p)).sum())
             .collect();
         distances.sort();
-        distances[0]
+        distances[0] + Distance::Finite(2) // the origin is not counted twice
     }
 }
 
@@ -310,5 +310,18 @@ mod tests {
 
         let nearest = panel.nearest_intersection();
         assert_eq!(nearest.distance(), 6);
+    }
+
+    #[test]
+    fn closest_distance_should_be_correctly_calculated() {
+        let mut panel = Panel::empty();
+
+        let wire = "R8,U5,L5,D3".parse::<Wire>().expect("wire to be parsed");
+        panel.place(wire);
+        let wire = "U7,R6,D4,L4".parse::<Wire>().expect("wire to be parsed");
+        panel.place(wire);
+
+        let distance = panel.closest_distance();
+        assert_eq!(distance, Distance::Finite(30));
     }
 }
