@@ -13,7 +13,7 @@ fn main() {
         for line in lines {
             if let Ok(line) = line {
                 if let Ok(wire) = line.parse::<Wire>() {
-                    panel.place(&wire);
+                    panel.place(wire);
                 }
             }
         }

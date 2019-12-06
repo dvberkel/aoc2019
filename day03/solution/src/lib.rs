@@ -1,10 +1,13 @@
 use std::collections::HashSet as Set;
-use std::iter::repeat;
+use std::iter::{repeat, Sum};
 use std::num::ParseIntError;
+use std::ops::Add;
+use std::cmp::{Ord, PartialOrd, Ordering};
+
 use std::str::FromStr;
 
 pub struct Panel {
-    wires: Vec<Set<Position>>,
+    wires: Vec<Wire>,
 }
 
 impl Panel {
@@ -12,16 +15,16 @@ impl Panel {
         Self { wires: Vec::new() }
     }
 
-    pub fn place(&mut self, wire: &Wire) {
-        self.wires.push(wire.segments());
+    pub fn place(&mut self, wire: Wire) {
+        self.wires.push(wire);
     }
 
     pub fn intersections(&self) -> Vec<Position> {
-        let initial: Set<Position> = self.wires[0].iter().cloned().collect();
+        let initial: Set<Position> = self.wires[0].segments().iter().cloned().collect();
         let intersections: Vec<Position> = self
             .wires
             .iter()
-            .fold(initial, |acc, s| acc.intersection(&s).cloned().collect())
+            .fold(initial, |acc, w| acc.intersection(&w.segments()).cloned().collect())
             .iter()
             .cloned()
             .collect();
@@ -32,6 +35,14 @@ impl Panel {
         let mut intersections = self.intersections();
         intersections.sort_by(|l, r| l.distance().cmp(&r.distance()));
         intersections[0]
+    }
+
+    pub fn closest_distance(&self) -> Distance {
+        let mut distances: Vec<Distance> = self.intersections().iter()
+            .map(|p| self.wires.iter().map(|w| w.distance_to(p)).sum())
+            .collect();
+        distances.sort();
+        distances[0]
     }
 }
 
@@ -145,9 +156,44 @@ impl From<Vec<Direction>> for Wire {
     }
 }
 
+#[derive(PartialEq, Eq, Debug, Copy, Clone)]
 pub enum Distance {
     Infinite,
     Finite(usize),
+}
+
+impl Add for Distance {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        match (self, other) {
+            (Distance::Finite(l), Distance::Finite(r)) => Distance::Finite(l + r),
+            _ => Distance::Infinite,
+        }
+    }
+}
+
+impl Ord for Distance {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (*self, *other) {
+            (Distance::Finite(l), Distance::Finite(r)) => l.cmp(&r),
+            (Distance::Infinite, Distance::Infinite) => Ordering::Equal,
+            (Distance::Infinite, _) => Ordering::Greater,
+            (_, Distance::Infinite) => Ordering::Less,
+        }
+    }
+}
+
+impl Sum<Distance> for Distance {
+    fn sum<I>(iter: I) -> Self where I: Iterator<Item=Self> {
+        iter.fold(Distance::Finite(0), |acc, d| acc + d)
+    }
+}
+
+impl PartialOrd for Distance {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 pub struct Instructions {
@@ -258,9 +304,9 @@ mod tests {
         let mut panel = Panel::empty();
 
         let wire = "R8,U5,L5,D3".parse::<Wire>().expect("wire to be parsed");
-        panel.place(&wire);
+        panel.place(wire);
         let wire = "U7,R6,D4,L4".parse::<Wire>().expect("wire to be parsed");
-        panel.place(&wire);
+        panel.place(wire);
 
         let nearest = panel.nearest_intersection();
         assert_eq!(nearest.distance(), 6);
