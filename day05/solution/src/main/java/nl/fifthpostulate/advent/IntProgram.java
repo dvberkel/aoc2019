@@ -21,7 +21,7 @@ public class IntProgram {
         Opcode opcode = Opcode.from(description % 100);
         Parameters parameters = Parameters.from(description / 100);
         opcode.execute(instructionPointer, memory, parameters);
-        instructionPointer = opcode.increment(instructionPointer);
+        instructionPointer = opcode.increment(instructionPointer, memory);
         return opcode;
     }
 
@@ -56,7 +56,7 @@ enum Opcode {
         }
 
         @Override
-        public int increment(int instructionPointer) {
+        public int increment(int instructionPointer, int[] memory) {
             return instructionPointer + 1;
         }
     },
@@ -69,7 +69,7 @@ enum Opcode {
         }
 
         @Override
-        public int increment(int instructionPointer) { return instructionPointer + 2; }
+        public int increment(int instructionPointer, int[] memory) { return instructionPointer + 2; }
     },
     Output {
         @Override
@@ -79,7 +79,7 @@ enum Opcode {
         }
 
         @Override
-        public int increment(int instructionPointer) { return instructionPointer + 2; }
+        public int increment(int instructionPointer, int[] memory) { return instructionPointer + 2; }
     },
     Unknown {
         @Override
@@ -101,7 +101,7 @@ enum Opcode {
 
     public abstract void execute(int instructionPointer, int[] memory, Parameters parameters);
 
-    public int increment(int instructionPointer) {
+    public int increment(int instructionPointer, int[] memory) {
         return instructionPointer + 4;
     }
 }
