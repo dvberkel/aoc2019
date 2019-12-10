@@ -1,7 +1,5 @@
 package nl.fifthpostulate.advent;
 
-import javax.xml.xpath.XPathEvaluationResult;
-
 public class IntProgram {
     private final int[] memory;
     private int instructionPointer = 0;
@@ -23,7 +21,7 @@ public class IntProgram {
         Opcode opcode = Opcode.from(description % 100);
         Parameters parameters = Parameters.from(description / 100);
         opcode.execute(instructionPointer, memory, parameters);
-        instructionPointer += opcode.increment();
+        instructionPointer = opcode.increment(instructionPointer);
         return opcode;
     }
 
@@ -58,8 +56,8 @@ enum Opcode {
         }
 
         @Override
-        public int increment() {
-            return 1;
+        public int increment(int instructionPointer) {
+            return instructionPointer + 1;
         }
     },
     Input {
@@ -71,7 +69,7 @@ enum Opcode {
         }
 
         @Override
-        public int increment() { return 2; }
+        public int increment(int instructionPointer) { return instructionPointer + 2; }
     },
     Output {
         @Override
@@ -81,7 +79,7 @@ enum Opcode {
         }
 
         @Override
-        public int increment() { return 2; }
+        public int increment(int instructionPointer) { return instructionPointer + 2; }
     },
     Unknown {
         @Override
@@ -103,8 +101,8 @@ enum Opcode {
 
     public abstract void execute(int instructionPointer, int[] memory, Parameters parameters);
 
-    public int increment() {
-        return 4;
+    public int increment(int instructionPointer) {
+        return instructionPointer + 4;
     }
 }
 
