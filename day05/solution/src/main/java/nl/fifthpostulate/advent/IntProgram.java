@@ -51,11 +51,6 @@ enum Opcode {
     },
     Stop {
         @Override
-        public void execute(int instructionPointer, int[] memory, Parameters parameters) {
-            // do nothing
-        }
-
-        @Override
         public int increment(int instructionPointer, int[] memory) {
             return instructionPointer + 1;
         }
@@ -99,7 +94,9 @@ enum Opcode {
         }
     }
 
-    public abstract void execute(int instructionPointer, int[] memory, Parameters parameters);
+    public void execute(int instructionPointer, int[] memory, Parameters parameters) {
+        // do nothing
+    }
 
     public int increment(int instructionPointer, int[] memory) {
         return instructionPointer + 4;
